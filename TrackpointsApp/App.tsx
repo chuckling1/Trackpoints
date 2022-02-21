@@ -6,6 +6,7 @@ import { useProgress, useTrackPlayerEvents } from 'react-native-track-player/lib
 import styles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const updateOptions = {
   stopWithApp: true,
@@ -17,21 +18,21 @@ const updateOptions = {
   ],
 };
 
-const songFile = new Sound('full_mix_come_on_get_happy.mp3', Sound.MAIN_BUNDLE, (error) => {
+const songDetails = {
+  id: '1',
+  url: require('../TrackpointsApp/android/app/src/main/res/raw/full_mix_come_on_get_happy.mp3'),
+  fileName: 'full_mix_come_on_get_happy.mp3',
+  title: 'The Greatest Song',
+  album: 'Great Album',
+  artist: 'A Great Dude',
+};
+
+const songFile = new Sound(songDetails.fileName, Sound.MAIN_BUNDLE, (error) => {
   if (error) {
     console.log('failed to load the sound', error);
     return;
   }
 });
-
-const songDetails = {
-  id: '1',
-  //url: 'https://drive.google.com/file/d/1f_D0tqTFLZFve_ci0l0u_ozmQSirTt-S/view?usp=sharing',
-  url: require('../TrackpointsApp/android/app/src/main/res/raw/full_mix_come_on_get_happy.mp3'),
-  title: 'The Greatest Song',
-  album: 'Great Album',
-  artist: 'A Great Dude',
-};
 
 const trackPlayerInit = async () => {
   TrackPlayer.updateOptions(updateOptions);
@@ -45,7 +46,7 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const { position } = useProgress(100);
+  const { position } = useProgress(50);
   const duration = songFile.getDuration();
 
   useEffect(() => {
@@ -54,6 +55,7 @@ const App = () => {
       setIsTrackPlayerInit(isInit);
     };
 
+    removeItem(pointsStorageKey);
     startPlayer();
   }, []);
 
@@ -67,9 +69,23 @@ const App = () => {
     }
   };
 
+  let points = '0,000';
+  const pointsStorageKey = 'points';
+
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-      console.log(position);
+      getItem(pointsStorageKey).then((data: any) => {
+        console.log('data', data);
+        if (data) {
+          points = data;
+        }
+      }).catch((error: string) => {
+        console.log(error);
+      }).finally(() => {
+        points += '|' + position;
+        putItem(pointsStorageKey, points);
+        console.log('points', points);
+      });
     }
   };
 
@@ -96,6 +112,19 @@ const App = () => {
       setIsPlaying(false);
     }
   });
+
+  let getItem = async (key: string) => {
+    return await AsyncStorage.getItem(key);
+  };
+
+  let putItem = async (key: string, item: any) => {
+    return await AsyncStorage.setItem(key, item);
+  };
+
+  let removeItem = async (key: string) => {
+    console.log('deleting key: ', key);
+    return await AsyncStorage.removeItem(key);
+  };
 
   return (
     <View style={styles.mainContainer}>
