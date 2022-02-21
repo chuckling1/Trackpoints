@@ -5,6 +5,7 @@ import TrackPlayer, { Capability, Event, State } from 'react-native-track-player
 import { useProgress, useTrackPlayerEvents } from 'react-native-track-player/lib/hooks';
 import styles from './styles';
 import Slider from '@react-native-community/slider';
+import Sound from 'react-native-sound';
 
 const updateOptions = {
   stopWithApp: true,
@@ -16,10 +17,17 @@ const updateOptions = {
   ],
 };
 
+const songFile = new Sound('full_mix_come_on_get_happy.mp3', Sound.MAIN_BUNDLE, (error) => {
+  if (error) {
+    console.log('failed to load the sound', error);
+    return;
+  }
+});
+
 const songDetails = {
   id: '1',
-  url:
-    'https://audio-previews.elements.envatousercontent.com/files/103682271/preview.mp3',
+  //url: 'https://drive.google.com/file/d/1f_D0tqTFLZFve_ci0l0u_ozmQSirTt-S/view?usp=sharing',
+  url: require('../TrackpointsApp/android/app/src/main/res/raw/full_mix_come_on_get_happy.mp3'),
   title: 'The Greatest Song',
   album: 'Great Album',
   artist: 'A Great Dude',
@@ -37,7 +45,8 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const { position, duration } = useProgress(100);
+  const { position } = useProgress(100);
+  const duration = songFile.getDuration();
 
   useEffect(() => {
     const startPlayer = async () => {
@@ -60,7 +69,7 @@ const App = () => {
 
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-
+      console.log(position);
     }
   };
 
