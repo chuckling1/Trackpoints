@@ -1,12 +1,20 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
 import { Button, Text, View } from 'react-native';
-import TrackPlayer, { Capability, Event, State } from 'react-native-track-player';
-import { useProgress, useTrackPlayerEvents } from 'react-native-track-player/lib/hooks';
+import TrackPlayer, {
+  Capability,
+  Event,
+  State,
+} from 'react-native-track-player';
+import {
+  useProgress,
+  useTrackPlayerEvents,
+} from 'react-native-track-player/lib/hooks';
 import styles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TrackPointButtonBar from './TrackPointButtonBar';
 
 const updateOptions = {
   stopWithApp: true,
@@ -27,7 +35,7 @@ const songDetails = {
   artist: 'A Great Dude',
 };
 
-const songFile = new Sound(songDetails.fileName, Sound.MAIN_BUNDLE, (error) => {
+const songFile = new Sound(songDetails.fileName, Sound.MAIN_BUNDLE, error => {
   if (error) {
     console.log('failed to load the sound', error);
     return;
@@ -46,7 +54,8 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const { position } = useProgress(50);
+  //const [getPoints, setPoints] = useState('');
+  const { position } = useProgress(100);
   const duration = songFile.getDuration();
 
   useEffect(() => {
@@ -69,23 +78,25 @@ const App = () => {
     }
   };
 
-  let points = '0,000';
+  let points = '0.000';
   const pointsStorageKey = 'points';
 
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-      getItem(pointsStorageKey).then((data: any) => {
-        console.log('data', data);
-        if (data) {
-          points = data;
-        }
-      }).catch((error: string) => {
-        console.log(error);
-      }).finally(() => {
-        points += '|' + position;
-        putItem(pointsStorageKey, points);
-        console.log('points', points);
-      });
+      getItem(pointsStorageKey)
+        .then((data: any) => {
+          if (data) {
+            points = data;
+          }
+        })
+        .catch((error: string) => {
+          console.log(error);
+        })
+        .finally(() => {
+          points += '|' + position;
+          putItem(pointsStorageKey, points);
+          //setPoints(points);
+        });
     }
   };
 
@@ -122,7 +133,6 @@ const App = () => {
   };
 
   let removeItem = async (key: string) => {
-    console.log('deleting key: ', key);
     return await AsyncStorage.removeItem(key);
   };
 
@@ -144,6 +154,9 @@ const App = () => {
           onSlidingComplete={slidingCompleted}
           thumbTintColor="#000"
         />
+        <View>
+          <TrackPointButtonBar timeStamps="0|100|200" />
+        </View>
         <View style={styles.buttonsContainer}>
           <View>
             <Button
@@ -162,7 +175,7 @@ const App = () => {
           </View>
         </View>
       </View>
-    </View >
+    </View>
   );
 };
 
