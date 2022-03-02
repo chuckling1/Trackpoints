@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 import TrackPlayer, {
   Capability,
@@ -13,8 +13,8 @@ import {
 import styles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import TrackPointButtonBar from './TrackPointButtonBar';
+import AppContext from './AppContext';
 
 const updateOptions = {
   stopWithApp: true,
@@ -54,9 +54,9 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  //const [getPoints, setPoints] = useState('');
   const { position } = useProgress(100);
   const duration = songFile.getDuration();
+  const [trackPoints, setTrackPoints] = useState([0, duration]);
 
   useEffect(() => {
     const startPlayer = async () => {
@@ -64,7 +64,6 @@ const App = () => {
       setIsTrackPlayerInit(isInit);
     };
 
-    removeItem(pointsStorageKey);
     startPlayer();
   }, []);
 
@@ -78,25 +77,11 @@ const App = () => {
     }
   };
 
-  let points = '0.000';
-  const pointsStorageKey = 'points';
-
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-      getItem(pointsStorageKey)
-        .then((data: any) => {
-          if (data) {
-            points = data;
-          }
-        })
-        .catch((error: string) => {
-          console.log(error);
-        })
-        .finally(() => {
-          points += '|' + position;
-          putItem(pointsStorageKey, points);
-          //setPoints(points);
-        });
+      let points = trackPoints;
+      points.splice(points.length - 2, 0, sliderValue);
+      setTrackPoints(points);
     }
   };
 
@@ -124,58 +109,53 @@ const App = () => {
     }
   });
 
-  let getItem = async (key: string) => {
-    return await AsyncStorage.getItem(key);
-  };
-
-  let putItem = async (key: string, item: any) => {
-    return await AsyncStorage.setItem(key, item);
-  };
-
-  let removeItem = async (key: string) => {
-    return await AsyncStorage.removeItem(key);
-  };
+  const contextValue = useMemo(
+    () => ({ trackPoints, setTrackPoints }),
+    [trackPoints]
+  );
 
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.songTitle}>{songDetails.title}</Text>
-        <Text style={styles.artist}>{songDetails.artist}</Text>
-      </View>
-      <View style={styles.controlsContainer}>
-        <Slider
-          style={styles.progressBar}
-          minimumValue={0}
-          maximumValue={1}
-          value={sliderValue}
-          minimumTrackTintColor="#111000"
-          maximumTrackTintColor="#000000"
-          onSlidingStart={slidingStarted}
-          onSlidingComplete={slidingCompleted}
-          thumbTintColor="#000"
-        />
-        <View>
-          <TrackPointButtonBar timeStamps="0|100|200" />
+    <AppContext.Provider value={contextValue}>
+      <View style={styles.mainContainer}>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.songTitle}>{songDetails.title}</Text>
+          <Text style={styles.artist}>{songDetails.artist}</Text>
         </View>
-        <View style={styles.buttonsContainer}>
+        <View style={styles.controlsContainer}>
+          <Slider
+            style={styles.progressBar}
+            minimumValue={0}
+            maximumValue={1}
+            value={sliderValue}
+            minimumTrackTintColor="#111000"
+            maximumTrackTintColor="#000000"
+            onSlidingStart={slidingStarted}
+            onSlidingComplete={slidingCompleted}
+            thumbTintColor="#000"
+          />
           <View>
-            <Button
-              title={isPlaying ? 'Pause' : 'Play'}
-              onPress={onPlayButtonPressed}
-              disabled={!isTrackPlayerInit}
-            />
+            <TrackPointButtonBar />
           </View>
-          <View style={styles.trackpointButtonContainer}>
-            <Button
-              color="red"
-              title="Add Track Point"
-              onPress={onTrackPointButtonPressed}
-              disabled={!isPlaying}
-            />
+          <View style={styles.buttonsContainer}>
+            <View>
+              <Button
+                title={isPlaying ? 'Pause' : 'Play'}
+                onPress={onPlayButtonPressed}
+                disabled={!isTrackPlayerInit}
+              />
+            </View>
+            <View style={styles.trackpointButtonContainer}>
+              <Button
+                color="red"
+                title="Add Track Point"
+                onPress={onTrackPointButtonPressed}
+                disabled={!isPlaying}
+              />
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </AppContext.Provider>
   );
 };
 

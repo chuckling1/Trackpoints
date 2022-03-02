@@ -6,12 +6,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#EDEDED',
     },
     detailsContainer: {
-        flex: 0.25,
+        flex: 0.2,
         justifyContent: 'center',
         alignItems: 'center',
     },
     controlsContainer: {
-        flex: 0.75,
+        flex: 0.8,
         justifyContent: 'flex-start',
     },
     progressBar: {
@@ -28,8 +28,13 @@ const styles = StyleSheet.create({
     buttonsContainer: {
         padding: 10,
     },
+    trackpointButtonBarContainer: {
+        paddingTop: 50, 
+    },
     trackpointButtonContainer: {
-        paddingTop: 50,
+        padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
 });
 

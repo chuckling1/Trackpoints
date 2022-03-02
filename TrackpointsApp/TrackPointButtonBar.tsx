@@ -1,31 +1,31 @@
-import React from 'react';
-import { Button, View } from 'react-native';
+import React, { useContext } from 'react';
+import { View } from 'react-native';
+import AppContext from './AppContext';
 import styles from './styles';
+import TrackPointButton from './TrackPointButton';
 
-export const TrackPointButtonBar = (props: any): JSX.Element => {
-    const times = props.timeStamps.split('|');
+export const TrackPointButtonBar = (): JSX.Element => {
+    const { trackPoints } = useContext(AppContext);
     const trackPointButtonBarView: JSX.Element[] = [];
 
-    times.map((time: string, index: number) => {
-        if (index !== times.length - 1) {
-            let w = parseInt(times[index + 1], 10) - parseInt(times[index], 10);
-
-            console.log(index);
+    trackPoints.map((time: number, index: number) => {
+        if (index !== trackPoints.length - 1) {
             trackPointButtonBarView.push(
-                <View
-                    key={index + '_key'}
-                    style={{
-                        width: w,
-                        flexDirection: 'column',
-                    }}>
-                    <Button title={'b' + time} onPress={() => { }} />
-                </View>,
+                <TrackPointButton
+                    key={`button_${index}`}
+                    startTime={trackPoints[index]}
+                    endTime={trackPoints[index + 1]}
+                />,
             );
         }
     });
 
     return (
-        <View style={styles.buttonsContainer}>{trackPointButtonBarView}</View>
+        <View
+            key="TrackPointsButtonBar"
+            style={styles.trackpointButtonContainer}>
+            {trackPointButtonBarView}
+        </View>
     );
 };
 
