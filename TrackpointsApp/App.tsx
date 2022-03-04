@@ -54,14 +54,16 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [trackDuration, setTrackDuration] = useState(0);
+  const [trackPoints, setTrackPoints] = useState([] as number[]);
   const { position } = useProgress(100);
-  const duration = songFile.getDuration();
-  const [trackPoints, setTrackPoints] = useState([0, duration]);
 
   useEffect(() => {
     const startPlayer = async () => {
       let isInit = await trackPlayerInit();
       setIsTrackPlayerInit(isInit);
+      setTrackDuration(songFile.getDuration());
+      setTrackPoints([0, 100]);
     };
 
     startPlayer();
@@ -90,16 +92,16 @@ const App = () => {
   };
 
   const slidingCompleted = async (value: number) => {
-    await TrackPlayer.seekTo(value * duration);
+    await TrackPlayer.seekTo(value * trackDuration);
     setSliderValue(value);
     setIsSeeking(false);
   };
 
   useEffect(() => {
-    if (!isSeeking && position && duration) {
-      setSliderValue(position / duration);
+    if (!isSeeking && position && trackDuration) {
+      setSliderValue(position / trackDuration);
     }
-  }, [position, duration, isSeeking]);
+  }, [position, trackDuration, isSeeking]);
 
   useTrackPlayerEvents([Event.PlaybackState], event => {
     if (event.state === State.Playing) {
@@ -110,8 +112,8 @@ const App = () => {
   });
 
   const contextValue = useMemo(
-    () => ({ trackPoints, setTrackPoints }),
-    [trackPoints]
+    () => ({ trackPoints, setTrackPoints, trackDuration }),
+    [trackPoints, trackDuration]
   );
 
   return (
