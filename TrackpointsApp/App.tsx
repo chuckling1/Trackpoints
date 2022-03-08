@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 import TrackPlayer, {
   Capability,
@@ -13,8 +13,9 @@ import {
 import styles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
-import TrackPointButtonBar from './TrackPointButtonBar';
-import AppContext from './AppContext';
+import SongDetails from './Interfaces/SongDetailsInterface';
+import TrackPointButton from './Components/TrackPointButton';
+import TrackPointButtonInterface from './Interfaces/TrackPointButtonInterface';
 
 const updateOptions = {
   stopWithApp: true,
@@ -26,7 +27,7 @@ const updateOptions = {
   ],
 };
 
-const songDetails = {
+const songDetails: SongDetails = {
   id: '1',
   url: require('../TrackpointsApp/android/app/src/main/res/raw/full_mix_come_on_get_happy.mp3'),
   fileName: 'full_mix_come_on_get_happy.mp3',
@@ -55,7 +56,8 @@ const App = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const [trackDuration, setTrackDuration] = useState(0);
-  const [trackPoints, setTrackPoints] = useState([] as number[]);
+  const [trackPointTimes, setTrackPointTimes] = useState([] as number[]);
+  const [trackPoints, setTrackPoints] = useState([] as TrackPointButtonInterface[]);
   const { position } = useProgress(100);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ const App = () => {
       let isInit = await trackPlayerInit();
       setIsTrackPlayerInit(isInit);
       setTrackDuration(songFile.getDuration());
-      setTrackPoints([0, 100]);
+      setTrackPoints([{ id: 'id_0', title: 'title_0', width: 100 }]);
     };
 
     startPlayer();
@@ -81,9 +83,14 @@ const App = () => {
 
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-      let points = trackPoints;
-      points.splice(points.length - 2, 0, sliderValue);
-      setTrackPoints(points);
+
+      let points = trackPointTimes;
+      console.log('points before', points);
+      points.push(sliderValue);
+      points.sort();
+      console.log('points after sort', points);
+      setTrackPointTimes(points);
+      console.log('trackPoints after setTrackPoints', trackPoints);
     }
   };
 
@@ -97,12 +104,6 @@ const App = () => {
     setIsSeeking(false);
   };
 
-  useEffect(() => {
-    if (!isSeeking && position && trackDuration) {
-      setSliderValue(position / trackDuration);
-    }
-  }, [position, trackDuration, isSeeking]);
-
   useTrackPlayerEvents([Event.PlaybackState], event => {
     if (event.state === State.Playing) {
       setIsPlaying(true);
@@ -111,53 +112,54 @@ const App = () => {
     }
   });
 
-  const contextValue = useMemo(
-    () => ({ trackPoints, setTrackPoints, trackDuration }),
-    [trackPoints, trackDuration]
-  );
+  useEffect(() => {
+    if (!isSeeking && position && trackDuration) {
+      setSliderValue(position / trackDuration);
+    }
+  }, [position, trackDuration, isSeeking]);
 
   return (
-    <AppContext.Provider value={contextValue}>
-      <View style={styles.mainContainer}>
-        <View style={styles.detailsContainer}>
-          <Text style={styles.songTitle}>{songDetails.title}</Text>
-          <Text style={styles.artist}>{songDetails.artist}</Text>
+    <View style={styles.mainContainer}>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.songTitle}>{songDetails.title}</Text>
+        <Text style={styles.artist}>{songDetails.artist}</Text>
+      </View>
+      <View style={styles.controlsContainer}>
+        <Slider
+          style={styles.progressBar}
+          minimumValue={0}
+          maximumValue={1}
+          value={sliderValue}
+          minimumTrackTintColor="#111000"
+          maximumTrackTintColor="#000000"
+          onSlidingStart={slidingStarted}
+          onSlidingComplete={slidingCompleted}
+          thumbTintColor="#000"
+        />
+        <View style={styles.trackpointButtonContainer}>
+          <TrackPointButton id="id_0" title="title_0" width={33} />
+          <TrackPointButton id="id_1" title="title_1" width={33} />
+          <TrackPointButton id="id_2" title="title_2" width={33} />
         </View>
-        <View style={styles.controlsContainer}>
-          <Slider
-            style={styles.progressBar}
-            minimumValue={0}
-            maximumValue={1}
-            value={sliderValue}
-            minimumTrackTintColor="#111000"
-            maximumTrackTintColor="#000000"
-            onSlidingStart={slidingStarted}
-            onSlidingComplete={slidingCompleted}
-            thumbTintColor="#000"
-          />
+        <View style={styles.buttonsContainer}>
           <View>
-            <TrackPointButtonBar />
+            <Button
+              title={isPlaying ? 'Pause' : 'Play'}
+              onPress={onPlayButtonPressed}
+              disabled={!isTrackPlayerInit}
+            />
           </View>
-          <View style={styles.buttonsContainer}>
-            <View>
-              <Button
-                title={isPlaying ? 'Pause' : 'Play'}
-                onPress={onPlayButtonPressed}
-                disabled={!isTrackPlayerInit}
-              />
-            </View>
-            <View style={styles.trackpointButtonContainer}>
-              <Button
-                color="red"
-                title="Add Track Point"
-                onPress={onTrackPointButtonPressed}
-                disabled={!isPlaying}
-              />
-            </View>
+          <View style={styles.trackpointButtonContainer}>
+            <Button
+              color="red"
+              title="Add Track Point"
+              onPress={onTrackPointButtonPressed}
+              disabled={!isPlaying}
+            />
           </View>
         </View>
       </View>
-    </AppContext.Provider>
+    </View>
   );
 };
 
