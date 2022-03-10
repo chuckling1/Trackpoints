@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import { Button, Text, TouchableOpacity, View } from 'react-native';
 import TrackPlayer, {
   Capability,
   Event,
@@ -10,12 +10,11 @@ import {
   useProgress,
   useTrackPlayerEvents,
 } from 'react-native-track-player/lib/hooks';
-import styles from './styles';
+import globalStyles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
 import SongDetails from './Interfaces/SongDetailsInterface';
 import TrackPointButton from './Components/TrackPointButton';
-import TrackPointButtonInterface from './Interfaces/TrackPointButtonInterface';
 
 const updateOptions = {
   stopWithApp: true,
@@ -43,6 +42,13 @@ const songFile = new Sound(songDetails.fileName, Sound.MAIN_BUNDLE, error => {
   }
 });
 
+// const getTestTrackPoints = () => {
+//   return [
+//     { id: 'id_0', title: 'title_0', isRepeating: false, startTime: 0, endTime: 33, width: 33 },
+//     { id: 'id_1', title: 'title_1', isRepeating: false, startTime: 34, endTime: 67, width: 33 },
+//     { id: 'id_2', title: 'title_2', isRepeating: false, startTime: 68, endTime: 100, width: 34 }] as TrackPointInterface[];
+// };
+
 const trackPlayerInit = async () => {
   TrackPlayer.updateOptions(updateOptions);
   await TrackPlayer.setupPlayer();
@@ -57,15 +63,16 @@ const App = () => {
   const [isSeeking, setIsSeeking] = useState(false);
   const [trackDuration, setTrackDuration] = useState(0);
   const [trackPointTimes, setTrackPointTimes] = useState([] as number[]);
-  const [trackPoints, setTrackPoints] = useState([] as TrackPointButtonInterface[]);
+  //const [trackPoints, setTrackPoints] = useState([] as TrackPointInterface[]);
   const { position } = useProgress(100);
 
   useEffect(() => {
     const startPlayer = async () => {
       let isInit = await trackPlayerInit();
+      //let points = await getTestTrackPoints();
       setIsTrackPlayerInit(isInit);
       setTrackDuration(songFile.getDuration());
-      setTrackPoints([{ id: 'id_0', title: 'title_0', width: 100 }]);
+      //setTrackPoints(points);
     };
 
     startPlayer();
@@ -90,7 +97,7 @@ const App = () => {
       points.sort();
       console.log('points after sort', points);
       setTrackPointTimes(points);
-      console.log('trackPoints after setTrackPoints', trackPoints);
+      //console.log('trackPoints after setTrackPoints', trackPoints);
     }
   };
 
@@ -119,14 +126,14 @@ const App = () => {
   }, [position, trackDuration, isSeeking]);
 
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.songTitle}>{songDetails.title}</Text>
-        <Text style={styles.artist}>{songDetails.artist}</Text>
+    <View style={globalStyles.mainContainer}>
+      <View style={globalStyles.detailsContainer}>
+        <Text style={globalStyles.songTitle}>{songDetails.title}</Text>
+        <Text style={globalStyles.artist}>{songDetails.artist}</Text>
       </View>
-      <View style={styles.controlsContainer}>
+      <View style={globalStyles.controlsContainer}>
         <Slider
-          style={styles.progressBar}
+          style={globalStyles.progressBar}
           minimumValue={0}
           maximumValue={1}
           value={sliderValue}
@@ -136,28 +143,29 @@ const App = () => {
           onSlidingComplete={slidingCompleted}
           thumbTintColor="#000"
         />
-        <View style={styles.trackpointButtonContainer}>
-          <TrackPointButton id="id_0" title="title_0" width={33} />
-          <TrackPointButton id="id_1" title="title_1" width={33} />
-          <TrackPointButton id="id_2" title="title_2" width={33} />
+        <View style={globalStyles.trackpointButtonContainer}>
+          <TrackPointButton id="id_0" title="title_0" width={30} startTime={0} endTime={0} isRepeating={true} />
+          <TrackPointButton id="id_1" title="title_1" width={10} startTime={0} endTime={0} isRepeating={false} />
+          <TrackPointButton id="id_2" title="title_2" width={60} startTime={0} endTime={0} isRepeating={false} />
         </View>
-        <View style={styles.buttonsContainer}>
-          <View>
-            <Button
-              title={isPlaying ? 'Pause' : 'Play'}
+        <View key={'but_view_play_pause'} style={globalStyles.buttonsContainer}>
+          <View style={globalStyles.button}>
+            <TouchableOpacity
+              key={'but_play_pause'}
               onPress={onPlayButtonPressed}
-              disabled={!isTrackPlayerInit}
-            />
-          </View>
-          <View style={styles.trackpointButtonContainer}>
-            <Button
-              color="red"
-              title="Add Track Point"
-              onPress={onTrackPointButtonPressed}
-              disabled={!isPlaying}
-            />
+              disabled={!isTrackPlayerInit}>
+              <Text style={globalStyles.textStyle}>{isPlaying ? 'Pause' : 'Play'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
+      </View>
+      <View style={globalStyles.trackpointButtonContainer}>
+        <Button
+          color="red"
+          title="Add Track Point"
+          onPress={onTrackPointButtonPressed}
+          disabled={!isPlaying}
+        />
       </View>
     </View>
   );

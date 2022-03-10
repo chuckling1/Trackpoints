@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-const styles = StyleSheet.create({
+const globalStyles = StyleSheet.create({
     mainContainer: {
         flex: 1,
         backgroundColor: '#EDEDED',
@@ -27,15 +27,28 @@ const styles = StyleSheet.create({
     },
     buttonsContainer: {
         padding: 10,
+        width: '100%',
+        alignItems: 'center',
     },
     trackpointButtonBarContainer: {
-        paddingTop: 50, 
+        paddingTop: 50,
     },
     trackpointButtonContainer: {
         padding: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
+    textStyle: {
+        color: 'white',
+        padding: 5,
+        width: '100%',
+    },
+    button: {
+        borderColor: 'black',
+        borderWidth: 1,
+        borderRadius: 5,
+        backgroundColor: 'blue',
+    },
 });
 
-export default styles;
+export default globalStyles;

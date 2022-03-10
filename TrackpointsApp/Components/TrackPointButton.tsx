@@ -1,28 +1,40 @@
-import React from 'react';
-import { Alert, Button, StyleSheet, View } from 'react-native';
-import TrackPointButtonInterface from '../Interfaces/TrackPointButtonInterface';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import TrackPointButtonInterface from '../Interfaces/TrackPointInterface';
+import globalStyles from '../styles';
 
 export const TrackPointButton = (
     props: TrackPointButtonInterface,
 ): JSX.Element => {
     const { id, width, title } = props;
 
-    const style = StyleSheet.create({
-        buttonStyle: {
+    const [isRepeating, setIsRepeating] = useState(false);
+    const trackPointButtonStyle = StyleSheet.create({
+        buttonView: {
             width: `${width}%`,
-            height: 50,
+            height: 35,
+            backgroundColor: isRepeating ? 'green' : 'blue',
         },
     });
 
+    const buttonStyleSheet = StyleSheet.flatten([
+        globalStyles.button,
+        trackPointButtonStyle.buttonView,
+    ]);
+
+    const toggleIsRepeating = () => {
+        setIsRepeating(!isRepeating);
+    };
+
     return (
-        <View key={`but_view_${id}`} style={style.buttonStyle}>
-            <Button
+        <View key={`but_view_${id}`} style={buttonStyleSheet}>
+            <TouchableOpacity
                 key={`but_${id}`}
-                title={title}
                 onPress={() => {
-                    Alert.alert(title);
-                }}
-            />
+                    toggleIsRepeating();
+                }}>
+                <Text style={globalStyles.textStyle}>{title}</Text>
+            </TouchableOpacity>
         </View>
     );
 };
