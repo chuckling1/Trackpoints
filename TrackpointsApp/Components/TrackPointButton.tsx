@@ -6,14 +6,17 @@ import globalStyles from '../styles';
 export const TrackPointButton = (
     props: TrackPointButtonInterface,
 ): JSX.Element => {
-    const { id, width, title } = props;
+    const { id, width, title, isRepeating } = props;
 
-    const [isRepeating, setIsRepeating] = useState(false);
+    const [isStateRepeating, setIsStateRepeating] = useState(
+        isRepeating ? true : false,
+    );
+
     const trackPointButtonStyle = StyleSheet.create({
         buttonView: {
             width: `${width}%`,
             height: 35,
-            backgroundColor: isRepeating ? 'green' : 'blue',
+            backgroundColor: isStateRepeating ? 'green' : 'blue',
         },
     });
 
@@ -23,7 +26,7 @@ export const TrackPointButton = (
     ]);
 
     const toggleIsRepeating = () => {
-        setIsRepeating(!isRepeating);
+        setIsStateRepeating(!isStateRepeating);
     };
 
     return (

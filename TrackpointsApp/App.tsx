@@ -13,8 +13,11 @@ import {
 import globalStyles from './styles';
 import Slider from '@react-native-community/slider';
 import Sound from 'react-native-sound';
-import SongDetails from './Interfaces/SongDetailsInterface';
 import TrackPointButton from './Components/TrackPointButton';
+import TrackPointInterface from './Interfaces/TrackPointInterface';
+import TrackDetails from './Components/TrackDetails';
+import { TrackMetaData } from './TrackMetaData';
+import { TrackPointsData } from './TrackPointsData';
 
 const updateOptions = {
   stopWithApp: true,
@@ -23,36 +26,21 @@ const updateOptions = {
     Capability.Pause,
     Capability.JumpForward,
     Capability.JumpBackward,
+    Capability.SeekTo,
   ],
 };
 
-const songDetails: SongDetails = {
-  id: '1',
-  url: require('../TrackpointsApp/android/app/src/main/res/raw/full_mix_come_on_get_happy.mp3'),
-  fileName: 'full_mix_come_on_get_happy.mp3',
-  title: 'The Greatest Song',
-  album: 'Great Album',
-  artist: 'A Great Dude',
-};
-
-const songFile = new Sound(songDetails.fileName, Sound.MAIN_BUNDLE, error => {
+const songFile = new Sound(TrackMetaData.fileName, Sound.MAIN_BUNDLE, error => {
   if (error) {
     console.log('failed to load the sound', error);
     return;
   }
 });
 
-// const getTestTrackPoints = () => {
-//   return [
-//     { id: 'id_0', title: 'title_0', isRepeating: false, startTime: 0, endTime: 33, width: 33 },
-//     { id: 'id_1', title: 'title_1', isRepeating: false, startTime: 34, endTime: 67, width: 33 },
-//     { id: 'id_2', title: 'title_2', isRepeating: false, startTime: 68, endTime: 100, width: 34 }] as TrackPointInterface[];
-// };
-
 const trackPlayerInit = async () => {
   TrackPlayer.updateOptions(updateOptions);
   await TrackPlayer.setupPlayer();
-  await TrackPlayer.add(songDetails);
+  await TrackPlayer.add(TrackMetaData);
   return true;
 };
 
@@ -62,17 +50,14 @@ const App = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const [trackDuration, setTrackDuration] = useState(0);
-  const [trackPointTimes, setTrackPointTimes] = useState([] as number[]);
-  //const [trackPoints, setTrackPoints] = useState([] as TrackPointInterface[]);
+  const [trackPointData, setTrackPointData] = useState(TrackPointsData);
   const { position } = useProgress(100);
 
   useEffect(() => {
     const startPlayer = async () => {
       let isInit = await trackPlayerInit();
-      //let points = await getTestTrackPoints();
       setIsTrackPlayerInit(isInit);
       setTrackDuration(songFile.getDuration());
-      //setTrackPoints(points);
     };
 
     startPlayer();
@@ -88,16 +73,30 @@ const App = () => {
     }
   };
 
+  const updateButtonWidths = (points: TrackPointInterface[]) => {
+    if (points.length > 0) {
+      let w = 100 / points.length;
+      points.map((point: TrackPointInterface) => {
+        point.width = w;
+      });
+    }
+    return points;
+  };
+
   const onTrackPointButtonPressed = () => {
     if (isPlaying) {
-
-      let points = trackPointTimes;
-      console.log('points before', points);
-      points.push(sliderValue);
+      let points = trackPointData;
+      points.push({
+        id: `id_${trackPointData.length}`,
+        title: `title_${trackPointData.length}`,
+        isRepeating: false,
+        startTime: sliderValue,
+        endTime: sliderValue + 5,
+        width: 10,
+      });
       points.sort();
-      console.log('points after sort', points);
-      setTrackPointTimes(points);
-      //console.log('trackPoints after setTrackPoints', trackPoints);
+      points = updateButtonWidths(points);
+      setTrackPointData(points);
     }
   };
 
@@ -127,10 +126,7 @@ const App = () => {
 
   return (
     <View style={globalStyles.mainContainer}>
-      <View style={globalStyles.detailsContainer}>
-        <Text style={globalStyles.songTitle}>{songDetails.title}</Text>
-        <Text style={globalStyles.artist}>{songDetails.artist}</Text>
-      </View>
+      <TrackDetails title={TrackMetaData.title} artist={TrackMetaData.artist} />
       <View style={globalStyles.controlsContainer}>
         <Slider
           style={globalStyles.progressBar}
@@ -144,9 +140,10 @@ const App = () => {
           thumbTintColor="#000"
         />
         <View style={globalStyles.trackpointButtonContainer}>
-          <TrackPointButton id="id_0" title="title_0" width={30} startTime={0} endTime={0} isRepeating={true} />
-          <TrackPointButton id="id_1" title="title_1" width={10} startTime={0} endTime={0} isRepeating={false} />
-          <TrackPointButton id="id_2" title="title_2" width={60} startTime={0} endTime={0} isRepeating={false} />
+          {trackPointData.map((point: TrackPointInterface) => {
+            return (
+              <TrackPointButton key={point.id} {...point} />);
+          })}
         </View>
         <View key={'but_view_play_pause'} style={globalStyles.buttonsContainer}>
           <View style={globalStyles.button}>

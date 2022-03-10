@@ -1,4 +1,4 @@
-interface SongDetailsInterface {
+interface TrackMetaDataInterface {
     id: string;
     url: any;
     fileName: string;
@@ -7,4 +7,4 @@ interface SongDetailsInterface {
     artist: string;
 }
 
-export default SongDetailsInterface;
+export default TrackMetaDataInterface;
