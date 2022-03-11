@@ -18,6 +18,7 @@ import TrackPointInterface from './Interfaces/TrackPointInterface';
 import TrackDetails from './Components/TrackDetails';
 import { TrackMetaData } from './TrackMetaData';
 import { TrackPointsData } from './TrackPointsData';
+import { AppModes } from './AppModes';
 
 const updateOptions = {
   stopWithApp: true,
@@ -49,15 +50,15 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const [trackDuration, setTrackDuration] = useState(0);
   const [trackPointData, setTrackPointData] = useState(TrackPointsData);
+  const [appMode, setAppMode] = useState(AppModes.Playback);
   const { position } = useProgress(100);
+  const trackDuration = songFile.getDuration();
 
   useEffect(() => {
     const startPlayer = async () => {
       let isInit = await trackPlayerInit();
       setIsTrackPlayerInit(isInit);
-      setTrackDuration(songFile.getDuration());
     };
 
     startPlayer();
@@ -73,13 +74,23 @@ const App = () => {
     }
   };
 
-  const updateButtonWidths = (points: TrackPointInterface[]) => {
-    if (points.length > 0) {
-      let w = 100 / points.length;
-      points.map((point: TrackPointInterface) => {
-        point.width = w;
+  const updateTrackPointData = (points: TrackPointInterface[]) => {
+    if (points.length > 1) {
+      points.map((current: TrackPointInterface, index: number) => {
+        let currentPoint = points[index];
+        if (index < points.length - 1) {
+          let nextPoint = points[index + 1];
+          nextPoint.endTime = currentPoint.endTime;
+          currentPoint.endTime = nextPoint.startTime;
+          currentPoint.width = (currentPoint.endTime - currentPoint.startTime) * 100;
+          nextPoint.width = (nextPoint.endTime - nextPoint.startTime) * 100;
+        } else if (index === points.length - 1) {
+          current.endTime = 1.0;
+          currentPoint.width = (currentPoint.endTime - currentPoint.startTime) * 100;
+        }
       });
     }
+
     return points;
   };
 
@@ -87,15 +98,15 @@ const App = () => {
     if (isPlaying) {
       let points = trackPointData;
       points.push({
-        id: `id_${trackPointData.length}`,
-        title: `title_${trackPointData.length}`,
+        id: `id_${points.length}`,
+        title: `title_${points.length}`,
         isRepeating: false,
         startTime: sliderValue,
-        endTime: sliderValue + 5,
-        width: 10,
+        endTime: 0,
+        width: 0,
       });
-      points.sort();
-      points = updateButtonWidths(points);
+      points.sort((a, b) => a.startTime - b.startTime);
+      points = updateTrackPointData(points);
       setTrackPointData(points);
     }
   };
@@ -124,9 +135,20 @@ const App = () => {
     }
   }, [position, trackDuration, isSeeking]);
 
+  const switchModes = () => {
+    switch (appMode) {
+      case AppModes.Playback:
+        setAppMode(AppModes.Edit);
+        break;
+      case AppModes.Edit:
+        setAppMode(AppModes.Playback);
+    }
+  };
+
   return (
     <View style={globalStyles.mainContainer}>
       <TrackDetails title={TrackMetaData.title} artist={TrackMetaData.artist} />
+      <Text>{sliderValue}</Text>
       <View style={globalStyles.controlsContainer}>
         <Slider
           style={globalStyles.progressBar}
@@ -157,12 +179,25 @@ const App = () => {
         </View>
       </View>
       <View style={globalStyles.trackpointButtonContainer}>
-        <Button
-          color="red"
-          title="Add Track Point"
-          onPress={onTrackPointButtonPressed}
-          disabled={!isPlaying}
-        />
+        {(appMode === AppModes.Edit
+          ? <>
+            <Button
+              color="purple"
+              title="Save Track Points"
+              onPress={switchModes}
+            />
+            <Button
+              color="red"
+              title="Add Track Point"
+              onPress={onTrackPointButtonPressed}
+              disabled={appMode === AppModes.Edit && !isPlaying} />
+          </>
+          : <Button
+            color="orange"
+            title="Edit Track Points"
+            onPress={switchModes}
+          />)
+        }
       </View>
     </View>
   );
