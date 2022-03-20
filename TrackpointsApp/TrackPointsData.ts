@@ -1,28 +1,30 @@
 import TrackPointInterface from './Interfaces/TrackPointInterface';
 
+const trackDuration = 113;
+
 export const TrackPointsData: TrackPointInterface[] = [
-    // {
-    //     id: 'id_0',
-    //     title: 'title_0',
-    //     isRepeating: true,
-    //     startTime: 0,
-    //     endTime: 10,
-    //     width: 33,
-    // },
-    // {
-    //     id: 'id_1',
-    //     title: 'title_1',
-    //     isRepeating: false,
-    //     startTime: 10,
-    //     endTime: 67,
-    //     width: 33,
-    // },
     {
         id: 'id_0',
-        title: 'title_0_defaultData',
+        title: 'title_0',
         isRepeating: false,
-        startTime: 0,
+        startTime: 0.0,
         endTime: 1.0,
-        width: 100,
+        width: 1,
+    },
+    {
+        id: 'id_1',
+        title: 'title_1',
+        isRepeating: true,
+        startTime: 1.01,
+        endTime: 10.0,
+        width: 9,
+    },
+    {
+        id: 'id_2',
+        title: 'title_2',
+        isRepeating: false,
+        startTime: 10.01,
+        endTime: trackDuration,
+        width: 90,
     },
 ];

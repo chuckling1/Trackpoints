@@ -54,6 +54,7 @@ const App = () => {
   const [appMode, setAppMode] = useState(AppModes.Playback);
   const { position } = useProgress(100);
   const trackDuration = songFile.getDuration();
+  const [currentTrackPoint, setCurrentTrackPoint] = useState(trackPointData[0]);
 
   useEffect(() => {
     const startPlayer = async () => {
@@ -89,6 +90,8 @@ const App = () => {
           currentPoint.width = (currentPoint.endTime - currentPoint.startTime) * 100;
         }
       });
+      let current = points[points.length - 1];
+      setCurrentTrackPoint(current);
     }
 
     return points;
@@ -101,7 +104,7 @@ const App = () => {
         id: `id_${points.length}`,
         title: `title_${points.length}`,
         isRepeating: false,
-        startTime: sliderValue,
+        startTime: position,
         endTime: 0,
         width: 0,
       });
@@ -130,10 +133,43 @@ const App = () => {
   });
 
   useEffect(() => {
-    if (!isSeeking && position && trackDuration) {
-      setSliderValue(position / trackDuration);
+    const getTrackPointByTimeStamp = (time: number) => {
+      if (currentTrackPoint && (position < currentTrackPoint.startTime || position > currentTrackPoint.endTime)) {
+        let nextTrackPoint = trackPointData.filter((trackPoint: TrackPointInterface) => {
+          return time >= trackPoint.startTime && time <= trackPoint.endTime;
+        });
+
+        return nextTrackPoint[0];
+      }
+    };
+
+    let nextPoint = getTrackPointByTimeStamp(position);
+
+    if (nextPoint) {
+      setCurrentTrackPoint(nextPoint);
     }
-  }, [position, trackDuration, isSeeking]);
+  }, [position, currentTrackPoint, trackPointData]);
+
+  useEffect(() => {
+    const setCurrentTrackPointAndPosition = () => {
+      let sliderPosition = position / trackDuration;
+
+      if (currentTrackPoint
+        && position >= currentTrackPoint.endTime
+        && currentTrackPoint.isRepeating
+        && appMode === AppModes.Playback) {
+        TrackPlayer.seekTo(currentTrackPoint.startTime);
+        sliderPosition = currentTrackPoint.startTime / trackDuration;
+      }
+
+      console.log(currentTrackPoint.startTime, sliderPosition);
+      setSliderValue(sliderPosition);
+    };
+
+    if (position && trackDuration) {
+      setCurrentTrackPointAndPosition();
+    }
+  }, [position, trackDuration, isSeeking, currentTrackPoint, appMode, trackPointData]);
 
   const switchModes = () => {
     switch (appMode) {
@@ -148,7 +184,7 @@ const App = () => {
   return (
     <View style={globalStyles.mainContainer}>
       <TrackDetails title={TrackMetaData.title} artist={TrackMetaData.artist} />
-      <Text>{sliderValue}</Text>
+      <Text>Current Track Point: {JSON.stringify(currentTrackPoint)}</Text>
       <View style={globalStyles.controlsContainer}>
         <Slider
           style={globalStyles.progressBar}
